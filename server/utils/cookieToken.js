@@ -1,5 +1,5 @@
-const cookieToken = (user, res) => {
-    const token = user.getJwtToken()
+const cookieToken = (profile, res) => {
+    const token = profile.getJwtToken()
 
     const options = {
         expires: new Date(
@@ -8,11 +8,11 @@ const cookieToken = (user, res) => {
         httpOnly: true,
     }
 
-    user.password = undefined;
+    profile.password = undefined;
     res.status(200).cookie("token", token, options).json({
         success: true,
         token,
-        user,
+        profile,
     })
 }
 

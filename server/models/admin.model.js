@@ -36,6 +36,10 @@ const adminSchema = mongoose.Schema({
         //     message: "Please Choose Any One - Boy, Girl, NONE",
         // }
     },
+    role: {
+        type: String,
+        default: "Admin",
+    },
     regNo: {
         type: String,
     },

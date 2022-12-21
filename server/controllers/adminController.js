@@ -3,9 +3,11 @@ const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
 const cloudinary = require("cloudinary").v2
+const mailHelper = require("../utils/emailHelper")
+const crypto = require("crypto")
 
 
-
+//All Admin Routes
 //Add Admin
 exports.addAdmin = BigPromise(async (req, res, next) => {
 
@@ -39,11 +41,12 @@ exports.addAdmin = BigPromise(async (req, res, next) => {
     ];
     let regNo = generateAdminRegNo.join("")
 
-    const user = await Admin.create({
+    const profile = await Admin.create({
         name,
         email,
         password,
         regNo,
+        role: "admin",
         contactNo,
         dob,
         photo: {
@@ -52,7 +55,7 @@ exports.addAdmin = BigPromise(async (req, res, next) => {
         },
     });
 
-    cookieToken(user, res);
+    cookieToken(profile, res);
 });
 
 
@@ -64,26 +67,146 @@ exports.loginAdmin = BigPromise(async (req, res, next) => {
         return next(new CustomError("Regno and Password is Required"))
     }
 
-    const user = await Admin.findOne({ regNo }).select("+password")
+    const profile = await Admin.findOne({ regNo }).select("+password")
 
-    if (!user) {
+    if (!profile) {
         return next(new CustomError("Regno and Password Does not Match", 400))
     }
-    const isPasswordCorrect = await user.isValidatedPassword(password);
+    const isPasswordCorrect = await profile.isValidatedPassword(password);
     if (!isPasswordCorrect) {
         return next(new CustomError("Email or Password does not Match", 400))
     }
-    cookieToken(user, res);
+    cookieToken(profile, res);
 })
 
 //logout
 exports.logoutAdmin = BigPromise(async (req, res, next) => {
     res.cookie('token', null, {
-      expires: new Date(Date.now()),
-      httpOnly: true,
+        expires: new Date(Date.now()),
+        httpOnly: true,
     })
     res.status(200).json({
-      success: true,
-      message: "Logout Success"
+        success: true,
+        message: "Logout Success"
     })
-  });
+});
+
+//Forgot Password
+exports.adminForgotPassword = BigPromise(async (req, res, next) => {
+    const { email } = req.body;
+
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+        return next(new CustomError("Email not found as Registered"));
+    }
+
+    //get token from profile models
+    const forgotToken = await admin.getForgotPasswordToken();
+    //not check everthing just save everything
+    await admin.save({ validateBeforeSave: true })
+
+    //create a URL
+    const myUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${forgotToken}`
+    //crafting message
+    const message = `Copy Paste this link in your URL and hit enter \n\n ${myUrl}`;
+
+    //attempt to send mail
+    try {
+
+        await mailHelper({
+            email: admin.email,
+            subject: "Scholary - Password reset email",
+            message,
+        })
+
+        res.status(200).json({
+            success: true,
+            message: `Email Sent SuccessFull To ${email} - It Is Valid Only For 20 min`
+        })
+
+
+    } catch (error) {
+        admin.forgotPasswordToken = undefined,
+            admin.forgotPasswordExpiry = undefined,
+            await admin.save({ validateBeforeSave: false })
+
+        return next(new CustomError(error.message, 500))
+    }
+})
+
+//Reset Password Through Mail
+exports.adminPasswordReset = BigPromise(async (req, res, next) => {
+
+    //grab token from params
+    const token = req.params.token;
+
+    //Encrypt token
+    const encryToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    //  @Find_One = check the encrypted token and date of expire that is greaten than now
+
+    const profile = await Admin.findOne({
+        forgotPasswordToken: encryToken,
+        forgotPasswordExpiry: {
+            $gt: Date.now()
+        }
+    });
+
+    // if profile Not found throw error
+    if (!profile) {
+        return next(new CustomError("Token is Invalid or Expired", 400))
+    }
+
+    // if password and confirm password doesnot match throw error
+    if (req.body.password !== req.body.confirmPassword) {
+        return next(new CustomError("Password is Confirm Password is don't match", 400))
+    }
+
+
+    // if all ok assign old password to new password and also clear the forgorPasswordToken
+    // and forgotPasswordExpiry
+
+    profile.password = req.body.password;
+    profile.forgotPasswordToken = undefined;
+    profile.forgotPasswordExpiry = undefined;
+
+
+    //At last save with new values that is password
+    await profile.save();
+
+    // send json response or send token
+
+    cookieToken(profile, res);
+
+});
+
+//display Profile
+exports.displayAdminProfile = BigPromise(async (req, res) => {
+    const profile = await Admin.findById(req.params.id)
+    res.status(201).json({
+        success: true,
+        profile,
+    })
+});
+
+//Change Password When Logged In
+exports.changeAdminPassword = BigPromise(async (req, res, next) => {
+
+    const adminId = req.profile.id;
+
+    const profile = await Admin.findById(adminId).select("+password")
+
+    const isCorrectOldPassword = await profile.isValidatedPassword(req.body.oldPassword)
+
+    if (!isCorrectOldPassword) {
+        return next(new CustomError("Old Password is incorrect", 400));
+    }
+
+    profile.password = req.body.password;
+
+    await profile.save()
+
+    //update the cookie
+    cookieToken(profile, res);
+});
