@@ -15,9 +15,9 @@ const adminSchema = mongoose.Schema({
     },
     email: {
         type: String,
-        required: [validate.isEmail, 'Please Enter Your Email'],
+        required: [true, 'Please Enter Your Email'],
         unique: true,
-        trim: true,
+        lowercase: true,
     },
     password: {
         type: String,
@@ -26,15 +26,15 @@ const adminSchema = mongoose.Schema({
     },
     gender: {
         type: String,
-        required: [true, 'Please Choose From - Boy, Girl, NONE'],
-        enum: {
-            values: [
-                'Boy',
-                'Girl',
-                'NONE',
-            ],
-            message: "Please Choose Any One - Boy, Girl, NONE",
-        }
+        //required: [true, 'Please Choose From - Boy, Girl, NONE'],
+        // enum: {
+        //     values: [
+        //         'Boy',
+        //         'Girl',
+        //         'NONE',
+        //     ],
+        //     message: "Please Choose Any One - Boy, Girl, NONE",
+        // }
     },
     regNo: {
         type: String,
@@ -49,10 +49,7 @@ const adminSchema = mongoose.Schema({
     },
     address: {
         type: String,
-        required: [true, "Please Provide Address"],
-    },
-    class: {
-        type: String,
+        //required: [true, "Please Provide Address"],
     },
     dob: {
         type: String,
@@ -67,9 +64,7 @@ const adminSchema = mongoose.Schema({
         type: Number,
         required: [true, "Please Provide Phone Number"],
         trim: true,
-        unique: true,
-        maxlength: [12, "Maximum Number Shhould Be Under 12 Number"],
-        minlength: [10, "Minimum Length of the Phone number is 10"]
+        min: 10,
     },
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
@@ -96,31 +91,31 @@ adminSchema.pre('save', async function (next) {
  * @Validate_Password - Comparing The Password from user password with encrypted password
  *******************************************************/
 
-adminSchema.methods.isValidatedPassword = async function (adminPassword) {
-    return await bcrypt.compare(adminPassword, this.password)
+adminSchema.methods.isValidatedPassword = async function (password) {
+    return await bcrypt.compare(password, this.password)
 }
 
 /***********************************************************
  * @Creates_and_Returns - JWT Token
  ***********************************************************/
-adminSchema.methods.getAdminJwtToken = function () {
+adminSchema.methods.getJwtToken = function () {
     return jwt.sign({ id: this._id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRY })
 }
 
 /**************************************************************
  * @Generate Forgot Password
  *************************************************************/
-adminSchema.methods.getAdminForgotPasswordToken = function () {
+adminSchema.methods.getForgotPasswordToken = function () {
     //generating a long and random string
 
-    const forgotAdminToken = crypto.randomBytes(20).toString('hex');
+    const forgotToken = crypto.randomBytes(20).toString('hex');
 
     //getting a hash 
-    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotAdminToken).digest('hex');
+    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotToken).digest('hex');
 
     //expiry of the token - Only 20 minutes
     this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
-    return forgotAdminToken;
+    return forgotToken;
 }
 
 module.exports = mongoose.model("Admin", adminSchema);

@@ -3,7 +3,6 @@ const express = require("express");
 const morgan = require("morgan")
 const fileUpload = require("express-fileupload");
 
-
 const app = express()
 
 //Express Middleware
@@ -21,9 +20,10 @@ app.use(morgan("tiny"))
 
 
 //All Routes Goes Here
-
+const admin = require("./routes/adminRoutes")
 
 // * Router * //
+app.use("/api/v1", admin)
 
 
 app.get("/", (req, res) => {
