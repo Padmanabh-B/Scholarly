@@ -2,11 +2,11 @@ const mongoose = require('mongoose')
 
 const attendenceSchema = mongoose.Schema({
     student: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Student'
     },
     subject: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject'
     },
     totalClassesByFaculty: {

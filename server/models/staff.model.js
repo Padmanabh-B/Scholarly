@@ -15,7 +15,7 @@ const staffSchema = mongoose.Schema({
     },
     email: {
         type: String,
-        required: [validate.isEmail, 'Please Enter Your Email'],
+        required: [true, 'Please Enter Your Email'],
         unique: true,
         trim: true,
     },
@@ -28,20 +28,20 @@ const staffSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    class: {
+    Staffclass: {
         type: String,
         required: true
     },
     gender: {
         type: String,
-        required: [true, 'Please Choose From - Boy, Girl, NONE'],
+        required: [true, 'Please Choose From - Men, Women, NONE'],
         enum: {
             values: [
-                'Boy',
-                'Girl',
+                'Men',
+                'Women',
                 'NONE',
             ],
-            message: "Please Choose Any One - Boy, Girl, NONE",
+            message: "Please Choose Any One - Men, Women, NONE",
         }
     },
     regNo: {
@@ -57,7 +57,6 @@ const staffSchema = mongoose.Schema({
     },
     address: {
         type: String,
-        required: [true, "Please Provide Address"],
     },
     class: {
         type: String,
@@ -65,8 +64,9 @@ const staffSchema = mongoose.Schema({
     dob: {
         type: String,
     },
-    joiningYear: {
+    year: {
         type: String,
+        require: [true, "Please Provide Year"]
     },
     aadharCard: {
         type: Number
@@ -110,31 +110,31 @@ staffSchema.pre('save', async function (next) {
  * @Validate_Password - Comparing The Password from user password with encrypted password
  *******************************************************/
 
-staffSchema.methods.isValidatedPassword = async function (staffPassword) {
-    return await bcrypt.compare(staffPassword, this.password)
+staffSchema.methods.isValidatedPassword = async function (Password) {
+    return await bcrypt.compare(Password, this.password)
 }
 
 /***********************************************************
  * @Creates_and_Returns - JWT Token
  ***********************************************************/
-staffSchema.methods.getStaffJwtToken = function () {
+staffSchema.methods.getJwtToken = function () {
     return jwt.sign({ id: this._id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRY })
 }
 
 /**************************************************************
  * @Generate Forgot Password
  *************************************************************/
-staffSchema.methods.getStaffForgotPasswordToken = function () {
+staffSchema.methods.getForgotPasswordToken = function () {
     //generating a long and random string
 
-    const forgotStaffToken = crypto.randomBytes(20).toString('hex');
+    const forgotToken = crypto.randomBytes(20).toString('hex');
 
     //getting a hash 
-    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotStaffToken).digest('hex');
+    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotToken).digest('hex');
 
     //expiry of the token - Only 20 minutes
     this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
-    return forgotStaffToken;
+    return forgotToken;
 }
 
 module.exports = mongoose.model("Staff", staffSchema);

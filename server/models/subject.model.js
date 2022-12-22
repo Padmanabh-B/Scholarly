@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const subjectSchema = mongoose.Schema({
-    class: {
+    subjectclass: {
         type: String,
         required: true
     },

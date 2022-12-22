@@ -1,6 +1,6 @@
 const Admin = require('../models/admin.model')
 const Student = require("../models/student.model")
-// const Staff = require("../models/staff.model")
+const Staff = require("../models/staff.model")
 const Subject = require("../models/subject.model")
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
@@ -218,6 +218,7 @@ exports.changeAdminPassword = BigPromise(async (req, res, next) => {
     cookieToken(profile, res);
 });
 
+//Admin add students
 exports.adminAddStudent = BigPromise(async (req, res, next) => {
     try {
         const { name, email, password, studentClass, year, aadharCard, gender, section, dob, studentMobileNumber, fatherMobileNumber } = req.body;
@@ -240,7 +241,7 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
         let date = new Date();
 
         const generateStudentRegNo = [
-            "STUDENT",
+            "STAFF",
             date.getFullYear(),
             studentClass,
         ];
@@ -286,6 +287,178 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
 
 })
 
+//admin get all students
 exports.findAllStudents = BigPromise(async (req, res, next) => {
-    
+    try {
+        const { studentClass, name } = req.body;
+        const students = await Student.find({});
+
+        if (!students) {
+            return next(new CustomError("No Students Found", 400))
+        }
+        res.status(200).json({
+            success: true,
+            students
+        })
+    } catch (error) {
+        return next(new CustomError(`${error}`, 400))
+    }
 })
+
+//find Student Based on Class and Year
+exports.findOneStudent = BigPromise(async (req, res, next) => {
+    try {
+        const { studentClass, year } = req.body;
+        const student = await Student.find({ studentClass, year })
+
+        if (!student) {
+            return next(new CustomError("No Students Found", 400))
+        }
+        res.status(200).json({
+            success: true,
+            student
+        })
+    } catch (error) {
+        return next(new CustomError(`${error}`, 400))
+    }
+})
+
+
+//Add Staff 
+exports.addStaff = BigPromise(async (req, res, next) => {
+    try {
+        const { name, email, password, designation, Staffclass, year, aadharCard, gender, dob, staffcontactNo } = req.body;
+
+        if (!(name || email || password || designation || Staffclass || year || aadharCard || gender || dob || staffcontactNo)) {
+            return next(new CustomError("All Fields Are Required"))
+        }
+
+        const staff = await Staff.find({ email });
+
+        if (!staff) {
+            return next(new CustomError("Email is Not Registerd"))
+        }
+        let date = new Date();
+
+        const generateStudentRegNo = [
+            "STAFF",
+            date.getFullYear(),
+            Staffclass,
+        ];
+        let regNo = generateStudentRegNo.join("")
+
+
+        const profile = await Staff.create({
+            regNo,
+            name,
+            email,
+            password,
+            designation,
+            Staffclass,
+            year,
+            aadharCard,
+            gender,
+            dob,
+            staffcontactNo,
+        });
+        profile.password = undefined;
+        res.status(201).json({
+            success: true,
+            message: `Hello ${name} Your Account Created Successfully`,
+            profile,
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({
+            success: false,
+            message: `Error in Adding New Student ${error.message}`
+        })
+    }
+})
+
+//admin get all Staff
+exports.findAllStaff = BigPromise(async (req, res, next) => {
+    try {
+        const staff = await Staff.find({});
+
+        if (!staff) {
+            return next(new CustomError("No Staff Found", 400))
+        }
+        res.status(200).json({
+            success: true,
+            staff
+        })
+    } catch (error) {
+        return next(new CustomError(`${error}`, 400))
+    }
+})
+
+
+//find Student Based on Class and Year
+exports.findOneStaff = BigPromise(async (req, res, next) => {
+    try {
+        const { Staffclass, year } = req.body;
+        const staff = await Staff.find({ Staffclass, year })
+
+        if (!staff) {
+            return next(new CustomError("No Students Found", 400))
+        }
+
+        res.status(200).json({
+            success: true,
+            staff
+        })
+    } catch (error) {
+        return next(new CustomError(`${error}`, 400))
+    }
+})
+
+
+//add Subjects
+exports.addSubject = BigPromise(async (req, res, next) => {
+    try {
+        const { totalClasses, subjectclass, subjectCode, subjectName, year } = req.body;
+
+        if (!(totalClasses || subjectclass || subjectCode || subjectName || year)) {
+            return next(new CustomError("All Fields Are required"))
+        }
+        const subject = await Subject.findOne({ subjectCode });
+        if (subject) {
+            return next(new CustomError("This Subject Code is Already Added"))
+        }
+        const newSubject = await Subject.create({
+            totalClasses,
+            subjectclass,
+            subjectCode,
+            subjectName,
+            year
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `${subjectName} is Added Successfully`
+        })
+
+        // const students = await Student.find({ subjectclass, year })
+        // if (students.length === 0) {
+        //     errors.subjectclass = "No Class found for given subject"
+        //     return res.status(400).json(errors)
+        // }
+        // else {
+        //     for (var i = 0; i < students.length; i++) {
+        //         students[i].subjects.push(newSubject._id)
+        //         await students[i].save()
+        //     }
+        //     res.status(200).json({ newSubject })
+        // }
+
+
+    } catch (error) {
+        return next(new CustomError(`Error In Adding New Subject, ${error.message}`))
+    }
+
+})
+
+
