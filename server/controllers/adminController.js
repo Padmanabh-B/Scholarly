@@ -1,10 +1,15 @@
 const Admin = require('../models/admin.model')
+const Student = require("../models/student.model")
+// const Staff = require("../models/staff.model")
+const Subject = require("../models/subject.model")
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
 const cloudinary = require("cloudinary").v2
 const mailHelper = require("../utils/emailHelper")
 const crypto = require("crypto")
+
+
 
 
 //All Admin Routes
@@ -183,7 +188,7 @@ exports.adminPasswordReset = BigPromise(async (req, res, next) => {
 
 //display Profile
 exports.displayAdminProfile = BigPromise(async (req, res) => {
-    const profile = await Admin.findById(req.params.id)
+    const profile = await Admin.findById(req.profile.id)
     res.status(201).json({
         success: true,
         profile,
@@ -194,7 +199,6 @@ exports.displayAdminProfile = BigPromise(async (req, res) => {
 exports.changeAdminPassword = BigPromise(async (req, res, next) => {
 
     const adminId = req.profile.id;
-
     const profile = await Admin.findById(adminId).select("+password")
 
     const isCorrectOldPassword = await profile.isValidatedPassword(req.body.oldPassword)
@@ -204,9 +208,84 @@ exports.changeAdminPassword = BigPromise(async (req, res, next) => {
     }
 
     profile.password = req.body.password;
-
     await profile.save()
 
     //update the cookie
+    res.status(200).json({
+        success: true,
+        message: "Password Changed Successfully"
+    })
     cookieToken(profile, res);
 });
+
+exports.adminAddStudent = BigPromise(async (req, res, next) => {
+    try {
+        const { name, email, password, studentClass, year, aadharCard, gender, section, dob, studentMobileNumber, fatherMobileNumber } = req.body;
+
+        if (!(name || email || password || studentClass || year || aadharCard || gender || section || dob || studentMobileNumber || fatherMobileNumber)) {
+            return next(new CustomError("All Fields Are Required"))
+        }
+
+        // res.stats(401).json({
+        //     success: false,
+        //     message: "All Fields Are Required"
+        // })
+
+        const student = await Student.find({ email });
+
+        if (!student) {
+            return next(new CustomError("Email  is Not Registerd"))
+        }
+
+        let date = new Date();
+
+        const generateStudentRegNo = [
+            "STUDENT",
+            date.getFullYear(),
+            studentClass,
+        ];
+        let regNo = generateStudentRegNo.join("")
+
+
+        const profile = await new Student({
+            regNo,
+            name,
+            email,
+            password,
+            studentClass,
+            year,
+            aadharCard,
+            gender,
+            section,
+            dob,
+            studentMobileNumber,
+            fatherMobileNumber
+        });
+        const subjects = await Subject.find({ year })
+        if (subjects.length !== 0) {
+            for (var i = 0; i < subjects.length; i++) {
+                Student.subjects.push(subjects[i]._id)
+            }
+        }
+        await profile.save()
+        profile.password = undefined;
+
+        res.status(201).json({
+            success: true,
+            message: `Hello ${name} Your Account Created Successfully`,
+            profile,
+        });
+
+
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            message: `Error in Adding New Student ${error.message}`
+        })
+    }
+
+})
+
+exports.findAllStudents = BigPromise(async (req, res, next) => {
+    
+})

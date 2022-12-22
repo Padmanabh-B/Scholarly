@@ -15,7 +15,7 @@ const studentSchema = mongoose.Schema({
     },
     email: {
         type: String,
-        required: [validate.isEmail, 'Please Enter Your Email'],
+        required: [true, 'Please Enter Your Email'],
         unique: true,
         trim: true,
     },
@@ -34,7 +34,7 @@ const studentSchema = mongoose.Schema({
     },
     subjects: [
         {
-            type: Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Subject'
         }
     ],
@@ -55,12 +55,26 @@ const studentSchema = mongoose.Schema({
             message: "Please Choose Any One - Boy, Girl, NONE",
         }
     },
+    role:{
+        type:String,
+        default:"student"
+    },
     regNo: {
         type: String
     },
-    class: {
+    studentClass: {
         type: String,
-        required: true
+        required: true,
+        enum: {
+            values: [
+                '06',
+                '07',
+                '08',
+                '09',
+                '10',
+            ],
+            message: "Please Choose Any One - 06,07,08,09,10",
+        }
     },
     section: {
         type: String,
@@ -90,7 +104,9 @@ const studentSchema = mongoose.Schema({
         minlength: [10, "Minimum Length of the Phone number is 10"]
     },
     fatherName: {
-        type: String
+        type: String,
+        maxlength: [35, "Name Should Not Be Exceed 32 Characters"],
+        minlength: [3, "Name Should Not Be Less than 3 Characters"]
     },
 
 })
@@ -99,7 +115,7 @@ const studentSchema = mongoose.Schema({
  * @Encrypt_Password_Before_Save
  * @Get_PlainPassword -Encrypt it using bcrypt hashing
  *****************************************************/
-staffSchema.pre('save', async function (next) {
+studentSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         return next();
     }
@@ -110,31 +126,31 @@ staffSchema.pre('save', async function (next) {
  * @Validate_Password - Comparing The Password from user password with encrypted password
  *******************************************************/
 
-staffSchema.methods.isValidatedPassword = async function (staffPassword) {
-    return await bcrypt.compare(staffPassword, this.password)
+studentSchema.methods.isValidatedPassword = async function (Password) {
+    return await bcrypt.compare(Password, this.password)
 }
 
 /***********************************************************
  * @Creates_and_Returns - JWT Token
  ***********************************************************/
-staffSchema.methods.getStaffJwtToken = function () {
+studentSchema.methods.getJwtToken = function () {
     return jwt.sign({ id: this._id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRY })
 }
 
 /**************************************************************
  * @Generate Forgot Password
  *************************************************************/
-staffSchema.methods.getStaffForgotPasswordToken = function () {
+studentSchema.methods.getForgotPasswordToken = function () {
     //generating a long and random string
 
-    const forgotStaffToken = crypto.randomBytes(20).toString('hex');
+    const forgotToken = crypto.randomBytes(20).toString('hex');
 
     //getting a hash 
-    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotStaffToken).digest('hex');
+    this.forgotPasswordToken = crypto.createHash('sha256').update(forgotToken).digest('hex');
 
     //expiry of the token - Only 20 minutes
     this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
-    return forgotStaffToken;
+    return forgotToken;
 }
 
 module.exports = mongoose.model('Student', studentSchema)
