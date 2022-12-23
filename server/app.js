@@ -21,9 +21,11 @@ app.use(morgan("tiny"))
 
 //All Routes Goes Here
 const admin = require("./routes/adminRoutes")
+const staff = require("./routes/staffRoutes")
 
 // * Router * //
 app.use("/api/v1", admin)
+app.use("/api/v1", staff)
 
 
 app.get("/", (req, res) => {

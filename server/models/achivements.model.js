@@ -132,3 +132,5 @@ const achivements = mongoose.Schema({
 
 
 })
+
+module.exports = mongoose.model('Achievements', achivements)

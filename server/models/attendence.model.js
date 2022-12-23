@@ -9,7 +9,7 @@ const attendenceSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject'
     },
-    totalClassesByFaculty: {
+    totalClassesByStaff: {
         type: Number,
         default: 0
     },
@@ -19,4 +19,4 @@ const attendenceSchema = mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('attendence', attendenceSchema)
+module.exports = mongoose.model('Attendence', attendenceSchema)

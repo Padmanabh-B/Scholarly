@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const subjectSchema = mongoose.Schema({
-    subjectclass: {
+    studentClass: {
         type: String,
         required: true
     },
@@ -30,7 +30,7 @@ const subjectSchema = mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('subject', subjectSchema)
+module.exports = mongoose.model('Subject', subjectSchema)
 
 
 

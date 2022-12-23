@@ -2,11 +2,11 @@ const mongoose = require('mongoose')
 
 const marksSchema = mongoose.Schema({
     student: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Student'
     },
     subject: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject'
     },
     exam: {
@@ -15,13 +15,14 @@ const marksSchema = mongoose.Schema({
     },
     marks: {
         type: Number,
+        require:[true,"Enter A Valid Number"],
         default: 0
     },
     totalMarks: {
         type: Number,
         default: 100
     },
-    class: {
+    studentClass: {
         type:String
     },
     semester: {

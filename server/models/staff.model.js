@@ -58,9 +58,6 @@ const staffSchema = mongoose.Schema({
     address: {
         type: String,
     },
-    class: {
-        type: String,
-    },
     dob: {
         type: String,
     },

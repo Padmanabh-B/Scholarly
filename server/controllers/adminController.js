@@ -9,9 +9,6 @@ const cloudinary = require("cloudinary").v2
 const mailHelper = require("../utils/emailHelper")
 const crypto = require("crypto")
 
-
-
-
 //All Admin Routes
 //Add Admin
 exports.addAdmin = BigPromise(async (req, res, next) => {
@@ -419,9 +416,9 @@ exports.findOneStaff = BigPromise(async (req, res, next) => {
 //add Subjects
 exports.addSubject = BigPromise(async (req, res, next) => {
     try {
-        const { totalClasses, subjectclass, subjectCode, subjectName, year } = req.body;
+        const { totalClasses, studentClass, subjectCode, subjectName, year } = req.body;
 
-        if (!(totalClasses || subjectclass || subjectCode || subjectName || year)) {
+        if (!(totalClasses || studentClass || subjectCode || subjectName || year)) {
             return next(new CustomError("All Fields Are required"))
         }
         const subject = await Subject.findOne({ subjectCode });
@@ -430,7 +427,7 @@ exports.addSubject = BigPromise(async (req, res, next) => {
         }
         const newSubject = await Subject.create({
             totalClasses,
-            subjectclass,
+            studentClass,
             subjectCode,
             subjectName,
             year
@@ -441,18 +438,18 @@ exports.addSubject = BigPromise(async (req, res, next) => {
             message: `${subjectName} is Added Successfully`
         })
 
-        // const students = await Student.find({ subjectclass, year })
-        // if (students.length === 0) {
-        //     errors.subjectclass = "No Class found for given subject"
-        //     return res.status(400).json(errors)
-        // }
-        // else {
-        //     for (var i = 0; i < students.length; i++) {
-        //         students[i].subjects.push(newSubject._id)
-        //         await students[i].save()
-        //     }
-        //     res.status(200).json({ newSubject })
-        // }
+        const students = await Student.find({ studentClass, year })
+        if (students.length === 0) {
+            return next(new CustomError("No Students Found"))
+            return res.status(400).json(errors)
+        }
+        else {
+            for (var i = 0; i < students.length; i++) {
+                students[i].subjects.push(newSubject._id)
+                await students[i].save()
+            }
+            res.status(200).json({ newSubject })
+        }
 
 
     } catch (error) {
