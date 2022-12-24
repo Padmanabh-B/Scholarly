@@ -19,9 +19,6 @@ const studentSchema = mongoose.Schema({
         unique: true,
         trim: true,
     },
-    panorama: {
-        type: String
-    },
     password: {
         type: String,
         minlength: [7, "Password Must Be 7 Characters"],
@@ -38,6 +35,11 @@ const studentSchema = mongoose.Schema({
             ref: 'Subject'
         }
     ],
+    address: {
+        type: String,
+        maxlength: [250, "Address Should Not Be Exceed 250 Characters"],
+        minlength: [10, "Address Should Not Be Less than 10 Characters"]
+    },
     aadharCard: {
         type: Number,
         minlength: [12, "Adhar No Must Be 12 Numbers"],
@@ -55,9 +57,9 @@ const studentSchema = mongoose.Schema({
             message: "Please Choose Any One - Boy, Girl, NONE",
         }
     },
-    role:{
-        type:String,
-        default:"student"
+    role: {
+        type: String,
+        default: "student"
     },
     regNo: {
         type: String
@@ -108,8 +110,13 @@ const studentSchema = mongoose.Schema({
         maxlength: [35, "Name Should Not Be Exceed 32 Characters"],
         minlength: [3, "Name Should Not Be Less than 3 Characters"]
     },
+    forgotPasswordToken: String,
+    forgotPasswordExpiry: Date,
 
-})
+},
+    {
+        timestamp: true,
+    })
 
 /******************************************************
  * @Encrypt_Password_Before_Save

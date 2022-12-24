@@ -32,6 +32,18 @@ exports.staffLogin = BigPromise(async (req, res, next) => {
     cookieToken(profile, res);
 })
 
+//staff Logout
+exports.logoutStaff = BigPromise(async (req, res, next) => {
+    res.cookie('token', null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+    })
+    res.status(200).json({
+        success: true,
+        message: "Logout Success"
+    })
+});
+
 // Get Students with Subjects
 exports.fetchStudents = BigPromise(async (req, res, next) => {
     try {
@@ -189,7 +201,7 @@ exports.getAllSubject = BigPromise(async (req, res, next) => {
 //Change Password Of Staff if Staff is Logged In
 exports.changeStaffPassword = BigPromise(async (req, res, next) => {
 
-    const staffId = req.profile.id;
+    const staffId = req.staff.id;
     const profile = await Staff.findById(staffId).select("+password")
 
     const isCorrectOldPassword = await profile.isValidatedPassword(req.body.oldPassword)
@@ -303,7 +315,7 @@ exports.staffPasswordReset = BigPromise(async (req, res, next) => {
 exports.updateStaffProfile = BigPromise(async (req, res, next) => {
     let result;
     if (!req.files) {
-        return next(new CustomError("Photo is Required For Signup", 404))
+        return next(new CustomError("Please Provide The Staff Profile Picture", 404))
     }
     const file = req.files.photo;
     result = await cloudinary.uploader.upload(file.tempFilePath, {
@@ -325,7 +337,7 @@ exports.updateStaffProfile = BigPromise(async (req, res, next) => {
         },
     }
 
-    const staff = await Staff.findByIdAndUpdate(req.params.id, newData, {
+    const profile = await Staff.findByIdAndUpdate(req.profile.id, newData, {
         new: true,
         runValidators: true,
         useFindAndModify: false,

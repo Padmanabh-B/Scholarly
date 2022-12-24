@@ -238,7 +238,7 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
         let date = new Date();
 
         const generateStudentRegNo = [
-            "STAFF",
+            "STUDENT",
             date.getFullYear(),
             studentClass,
         ];
@@ -259,10 +259,10 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
             studentMobileNumber,
             fatherMobileNumber
         });
-        const subjects = await Subject.find({ year })
-        if (subjects.length !== 0) {
-            for (var i = 0; i < subjects.length; i++) {
-                Student.subjects.push(subjects[i]._id)
+        const sub = await Subject.find({ year });
+        if (sub.length !== 0) {
+            for (var i = 0; i < sub.length; i++) {
+                Student.subjects?.push(sub[i]._id)
             }
         }
         await profile.save()
@@ -276,6 +276,8 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
 
 
     } catch (error) {
+
+        console.log(error)
         res.status(401).json({
             success: false,
             message: `Error in Adding New Student ${error.message}`

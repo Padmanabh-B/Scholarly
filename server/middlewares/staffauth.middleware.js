@@ -1,11 +1,9 @@
-const Admin = require("../models/admin.model")
 const Staff = require("../models/staff.model")
-const Student = require("../models/student.model")
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/customError")
 const jwt = require("jsonwebtoken")
 
-exports.isLoggedIn = BigPromise(async (req, res, next) => {
+exports.isStaffLoggedIn = BigPromise(async (req, res, next) => {
     let token;
 
     if (req.cookies.token ||
@@ -25,9 +23,7 @@ exports.isLoggedIn = BigPromise(async (req, res, next) => {
 
         const decodedJwtPayload = jwt.verify(token, process.env.JWT_SECRET)
         //_id, findUser based on Id set this in req.user
-        req.profile = await Admin.findById(decodedJwtPayload.id)
-        req.profile = await Staff.findById(decodedJwtPayload.id)
-        req.profile = await Student.findById(decodedJwtPayload.id)
+        req.staff = await Staff.findById(decodedJwtPayload.id)
         next();
     } catch (error) {
         throw new CustomError("Not authorized to access this route", 401)
