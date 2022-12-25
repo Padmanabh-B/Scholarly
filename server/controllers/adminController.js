@@ -235,15 +235,26 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
             return next(new CustomError("Email  is Not Registerd"))
         }
 
+        const students = await Student.find({ studentClass })
+        let increment;
+        if (students.length < 10) {
+            increment = "00" + students.length.toString()
+        }
+        else if (students.length < 100 && students.length > 9) {
+            increment = "0" + students.length.toString();
+        }
+        else {
+            increment = students.length.toString()
+        }
         let date = new Date();
 
         const generateStudentRegNo = [
-            "STUDENT",
+            "SDT",
             date.getFullYear(),
             studentClass,
+            increment,
         ];
         let regNo = generateStudentRegNo.join("")
-
 
         const profile = await new Student({
             regNo,
@@ -259,12 +270,14 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
             studentMobileNumber,
             fatherMobileNumber
         });
+        await profile.save()
         const sub = await Subject.find({ year });
         if (sub.length !== 0) {
             for (var i = 0; i < sub.length; i++) {
                 Student.subjects?.push(sub[i]._id)
             }
         }
+
         await profile.save()
         profile.password = undefined;
 
