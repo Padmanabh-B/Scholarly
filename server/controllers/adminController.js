@@ -2,6 +2,7 @@ const Admin = require('../models/admin.model')
 const Student = require("../models/student.model")
 const Staff = require("../models/staff.model")
 const Subject = require("../models/subject.model")
+const Announcement = require('../models/announcements.model')
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
@@ -299,6 +300,37 @@ exports.adminAddStudent = BigPromise(async (req, res, next) => {
 
 })
 
+
+exports.adminDeleteOneStaff = BigPromise(async (req, res, next) => {
+    const staff = await Staff.findById(req.params.id);
+
+    if (!staff) {
+        return next(new CustomError(`${staff} - No User Found From This Name`))
+    }
+    const imageId = staff.photo.public_id;
+    await cloudinary.uploader.destroy(imageId)
+
+    await staff.remove()
+    res.status(201).json({
+        success: true,
+    })
+});
+
+exports.adminDeleteOneStudent = BigPromise(async (req, res, next) => {
+    const student = await Student.findById(req.params.id);
+
+    if (!student) {
+        return next(new CustomError(`${student} - No User Found From This Name`))
+    }
+    const imageId = student.photo.public_id;
+    await cloudinary.uploader.destroy(imageId)
+
+    await student.remove()
+    res.status(201).json({
+        success: true,
+    })
+});
+
 //admin get all students
 exports.findAllStudents = BigPromise(async (req, res, next) => {
     try {
@@ -470,6 +502,27 @@ exports.addSubject = BigPromise(async (req, res, next) => {
     } catch (error) {
         return next(new CustomError(`Error In Adding New Subject, ${error.message}`))
     }
+
+});
+
+exports.announceEvent = BigPromise(async (req, res, next) => {
+    const { title, desc } = req.body;
+
+    if (!(title && desc)) {
+        return next(new CustomError('Title and Description in Mandatory'))
+    }
+
+    const newAncment = await Announcement.create({
+        title,
+        desc
+    });
+
+    res.status(201).json({
+        success: true,
+        message: "Announcement Added",
+        newAncment
+    })
+
 
 })
 
