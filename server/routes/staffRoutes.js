@@ -13,7 +13,10 @@ const {
     changeStaffPassword,
     staffForgotPassword,
     staffPasswordReset,
-    updateStaffProfile
+    updateStaffProfile,
+    getAllAnnouncements,
+    uploadStudentNotes,
+    deleteStaffAccount
 } = require("../controllers/staffControllers")
 
 router.route("/staff/login").post(staffLogin);
@@ -26,6 +29,9 @@ router.route("/staff/profile/changepassword").post(isStaffLoggedIn, changeStaffP
 router.route("/staff/forgotpassword/").post(staffForgotPassword);
 router.route("/staff/password/reset/:token/").post(staffPasswordReset);
 router.route("/staff/profile/update-profile").post(isLoggedIn, updateStaffProfile);
+router.route("/staff/announcmenets").get(isLoggedIn, getAllAnnouncements);
+router.route("/staff/notes/upload").post(isLoggedIn, uploadStudentNotes);
+router.route("/staff/profile/delete/:id").post(isLoggedIn, deleteStaffAccount);
 
 
 module.exports = router;
