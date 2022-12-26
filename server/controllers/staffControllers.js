@@ -5,6 +5,9 @@ const Staff = require("../models/staff.model")
 const Subject = require("../models/subject.model")
 const StudentNotes = require("../models/classNotes.model")
 const Announcement = require('../models/announcements.model')
+const Achievements = require('../models/achivements.model')
+const Leave = require('../models/leave.model')
+const UpcommingExam = require('../models/upExams.model')
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
@@ -354,6 +357,41 @@ exports.updateStaffProfile = BigPromise(async (req, res, next) => {
 
 });
 
+exports.staffLeaveMessage = BigPromise(async (req, res, next) => {
+    try {
+        const { rollNo, name, reson, leaveMessage, leavefrom, leaveto, totaldays } = req.body;
+        if (!(rollNo || name || reson || leaveMessage || leavefrom || leaveto || totaldays)) {
+            return next(new CustomError('All Fields Are requied '))
+        }
+        let rno = await Staff.findOne({ rollNo });
+        if (!rno) {
+            return next(new CustomError('No Staff Found'))
+        }
+
+        const staffLeave = await Leave.create({
+            rollNo,
+            name,
+            reson,
+            leaveMessage,
+            leavefrom,
+            leaveto,
+            totaldays,
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Leave Applied Successfully",
+            staffLeave
+        })
+    } catch (error) {
+        return next(new CustomError(`There is A Issue in Applying Leave ${error.message}`))
+
+    }
+
+})
+
+
+
 exports.getAllAnnouncements = BigPromise(async (req, res, next) => {
     try {
         const announcements = await Announcement.find({})
@@ -413,6 +451,58 @@ exports.uploadStudentNotes = BigPromise(async (req, res, next) => {
     }
 })
 
+exports.uploadStudnetAchivements = BigPromise(async (req, res, next) => {
+    regNo = await Student.findOne({ regNo })
+    const { regNo, Drawing, Emotional_SocialSkills, Organisation_Skills, Scientific_Skills, Fine_Arts, Attitudes, Creative_Skills, Moral_Skills, About_Student } = req.body;
+
+    if (!regNo) {
+        return next(new CustomError("Register Number Does't Found"))
+    }
+    if (!(Drawing || Emotional_SocialSkills || Organisation_Skills || Scientific_Skills || Fine_Arts || Attitudes || Creative_Skills || Moral_Skills || About_Student)) {
+        return next(new CustomError('All Fields are Reqired'))
+    }
+
+    const assignAcment = await Achievements.create({
+        regNo,
+        Drawing,
+        Emotional_SocialSkills,
+        Organisation_Skills,
+        Scientific_Skills,
+        Fine_Arts, Attitudes,
+        Creative_Skills,
+        Moral_Skills,
+        About_Student
+    });
+
+    res.status(201).json({
+        success: true,
+        message: "Added Successfully",
+    })
+
+
+})
+
+exports.upcommingExams = BigPromise(async (req, res, next) => {
+    const { studentClass, subjectCode, exam, totalMarks, date } = req.body
+    if (!(studentClass || subjectCode || exam || totalMarks || date)) {
+        return next(new CustomError('All Fields are required'))
+    }
+    if ((studentClass && subjectCode) !== Subject.find({ studentClass, subjectCode })) {
+        return next(new CustomError(`${studentClass} and ${subjectCode} does't match`))
+    }
+
+    const createExam = await UpcommingExam.create({
+        studentClass,
+        subjectCode,
+        exam,
+        totalMarks,
+        date
+    })
+    res.status(201).json({
+        success: true,
+        message: "Exam Created Successfully",
+    })
+})
 
 
 exports.deleteStaffAccount = BigPromise(async (req, res, next) => {

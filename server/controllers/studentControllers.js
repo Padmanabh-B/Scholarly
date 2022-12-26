@@ -9,6 +9,9 @@ const cookieToken = require("../utils/cookieToken")
 const cloudinary = require("cloudinary").v2
 const mailHelper = require("../utils/emailHelper")
 const crypto = require("crypto")
+const Exams = require("../models/upExams.model")
+const Leave = require('../models/leave.model')
+
 
 
 // Student Login
@@ -269,6 +272,74 @@ exports.findAllSubjects = BigPromise(async (req, res, next) => {
     }
     res.send(201).json({ result: subjects })
 })
+
+exports.getNotes = BigPromise(async (req, res, next) => {
+    const { studentClass, section, year } = req.body;
+    if (!(studentClass || section || year)) {
+        return next(new CustomError('All Fields are Required'))
+    }
+    const getNotes = await Notes.find({ studentClass, section, year })
+
+    if (!getNotes) {
+        return next(new CustomError('No Notes Found'))
+    }
+    res.status(200).json({
+        getNotes
+    })
+})
+
+exports.getAchivements = BigPromise(async (req, res, next) => {
+    const student = await Student.findById(req.params.id)
+    if (!student) {
+        return next(new CustomError('No Student Found'))
+    }
+    res.status(200).json({
+        student
+    })
+});
+
+exports.getNewExams = BigPromise(async (req, res, next) => {
+    const exams = await Exams.find()
+    if (!exams) {
+        return next(new CustomError('No Exams Are Found'))
+    }
+    res.status(200).json({
+        exams
+    })
+});
+
+exports.studentLeaveMessage = BigPromise(async (req, res, next) => {
+    try {
+        const { rollNo, name, reson, leaveMessage, leavefrom, leaveto, totaldays } = req.body;
+        if (!(rollNo || name || reson || leaveMessage || leavefrom || leaveto || totaldays)) {
+            return next(new CustomError('All Fields Are requied '))
+        }
+        let rno = await Student.findOne({ rollNo });
+        if (!rno) {
+            return next(new CustomError('No Student Found'))
+        }
+
+        const studentLeave = await Leave.create({
+            rollNo,
+            name,
+            reson,
+            leaveMessage,
+            leavefrom,
+            leaveto,
+            totaldays,
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Leave Applied Successfully",
+            studentLeave
+        })
+    } catch (error) {
+        return next(new CustomError(`There is A Issue in Applying Leave ${error.message}`))
+
+    }
+
+});
 
 exports.deleteStudentAccount = BigPromise(async (req, res, next) => {
     const student = await Student.findById(req.params.id);
