@@ -3,6 +3,8 @@ const Marks = require("../models/marks.model")
 const Attendence = require("../models/attendence.model")
 const Staff = require("../models/staff.model")
 const Subject = require("../models/subject.model")
+const StudentNotes = require("../models/classNotes.model")
+const Announcement = require('../models/announcements.model')
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
@@ -351,4 +353,81 @@ exports.updateStaffProfile = BigPromise(async (req, res, next) => {
 
 
 });
+
+exports.getAllAnnouncements = BigPromise(async (req, res, next) => {
+    try {
+        const announcements = await Announcement.find({})
+
+        if (!announcements) {
+            return next(new CustomError(`None of the Announcements Found`))
+        }
+
+        res.status(200).json({ allSubjects })
+    } catch (error) {
+        console.log(error);
+        return next(new CustomError(`Error in Finding Announcements ${error.message}`))
+    }
+})
+
+
+exports.uploadStudentNotes = BigPromise(async (req, res, next) => {
+    try {
+        let result;
+        if (!req.files) {
+            return next(new CustomError("Please Provide The Notes", 404))
+        }
+        const file = req.files.notes;
+        result = await cloudinary.uploader.upload(file.tempFilePath, {
+            folder: 'Notes',
+        });
+        const { studentClass, section, year, subjectCode } = req.body;
+        const scode = await Subject.findOne({ subjectCode })
+        if (!scode) {
+            return next(new CustomError("No SubjectCode Found "))
+        }
+        if (!(studentClass || subjectCode || section || year)) {
+            return next(new CustomError('All Fields Are required'));
+        }
+
+        const upWorkNotes = await StudentNotes.create({
+            studentClass,
+            subjectCode,
+            section,
+            year,
+            notes: {
+                public_id: result.public_id,
+                secure_url: result.secure_url,
+            },
+        })
+
+        res.status(200).json({
+            success: true,
+            message: "Uploaded Notes Successfully",
+            upWorkNotes,
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return next(new CustomError(`Error in Finding Announcements ${error.message}`))
+    }
+})
+
+
+
+exports.deleteStaffAccount = BigPromise(async (req, res, next) => {
+    const staff = await Staff.findById(req.params.id);
+
+    if (!staff) {
+        return next(new CustomError(`${staff} - No User Found From This Name`))
+    }
+    const imageId = staff.photo.public_id;
+    await cloudinary.uploader.destroy(imageId)
+
+    await staff.remove()
+    res.status(201).json({
+        success: true,
+    })
+});
+
 

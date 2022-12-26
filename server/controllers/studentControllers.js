@@ -206,10 +206,10 @@ exports.studentPasswordReset = BigPromise(async (req, res, next) => {
 });
 
 //Update Student Profile
-exports.updateStaffProfile = BigPromise(async (req, res, next) => {
+exports.updateStudentProfile = BigPromise(async (req, res, next) => {
     let result;
     if (!req.files) {
-        return next(new CustomError("Please Provide The Staff Profile Picture", 404))
+        return next(new CustomError("Please Provide The Student Profile Picture", 404))
     }
     const file = req.files.photo;
     result = await cloudinary.uploader.upload(file.tempFilePath, {
@@ -238,7 +238,7 @@ exports.updateStaffProfile = BigPromise(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "Staff Details Updated Successfully"
+        message: "Student Details Updated Successfully"
     })
 
 
@@ -269,6 +269,21 @@ exports.findAllSubjects = BigPromise(async (req, res, next) => {
     }
     res.send(201).json({ result: subjects })
 })
+
+exports.deleteStudentAccount = BigPromise(async (req, res, next) => {
+    const student = await Student.findById(req.params.id);
+
+    if (!student) {
+        return next(new CustomError(`${student} - No User Found From This Name`))
+    }
+    const imageId = student.photo.public_id;
+    await cloudinary.uploader.destroy(imageId)
+
+    await student.remove()
+    res.status(201).json({
+        success: true,
+    })
+});
 
 
 
