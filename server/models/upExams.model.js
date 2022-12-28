@@ -27,4 +27,4 @@ const upcommingExamSchema = mongoose.Schema({
 }
 )
 
-module.exports = mongoose.model('UpcommingExam', upExamSchema)
+module.exports = mongoose.model('UpcommingExam', upcommingExamSchema)
