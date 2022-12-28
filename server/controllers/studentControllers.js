@@ -2,6 +2,7 @@ const Student = require("../models/student.model")
 const Marks = require("../models/marks.model")
 const Attendence = require("../models/attendence.model")
 const Staff = require("../models/staff.model")
+const FeedBack = require("../models/feedback.model")
 const Subject = require("../models/subject.model")
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
@@ -314,7 +315,7 @@ exports.studentLeaveMessage = BigPromise(async (req, res, next) => {
         if (!(rollNo || name || reson || leaveMessage || leavefrom || leaveto || totaldays)) {
             return next(new CustomError('All Fields Are requied '))
         }
-        let rno = await Student.findOne({ rollNo });
+        let rno = await Student.find({ rollNo });
         if (!rno) {
             return next(new CustomError('No Student Found'))
         }
@@ -336,6 +337,30 @@ exports.studentLeaveMessage = BigPromise(async (req, res, next) => {
         })
     } catch (error) {
         return next(new CustomError(`There is A Issue in Applying Leave ${error.message}`))
+
+    }
+
+});
+
+exports.studentFeedbackMessage = BigPromise(async (req, res, next) => {
+    try {
+        const { feedbackMessage } = req.body;
+        if (!feedbackMessage) {
+            return next(new CustomError('Please Provide Feeback Message'))
+        }
+
+
+        const studentFeedBack = await FeedBack.create({
+            feedbackMessage
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Leave Applied Successfully",
+            studentFeedBack
+        })
+    } catch (error) {
+        return next(new CustomError(`There is A Issue in Applying Feedback ${error.message}`))
 
     }
 

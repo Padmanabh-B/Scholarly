@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("../middlewares/auth.middleware")
 
-const { addAdmin, loginAdmin, logoutAdmin, adminForgotPassword, adminPasswordReset, displayAdminProfile, changeAdminPassword, adminAddStudent, findAllStudents, findOneStudent, addStaff, findOneStaff, findAllStaff, addSubject, announceEvent, adminDeleteOneStaff, adminDeleteOneStudent } = require("../controllers/adminController")
+const { addAdmin, loginAdmin, logoutAdmin, adminForgotPassword, adminPasswordReset, displayAdminProfile, changeAdminPassword, adminAddStudent, findOneStudent, addStaff, findOneStaff, findAllStaff, addSubject, announceEvent, adminDeleteOneStaff, adminDeleteOneStudent, findAllStudents, studentFeedbackMessage } = require("../controllers/adminController")
 
 router.route("/addAdmin").post(addAdmin)
 router.route("/adminLogin").post(loginAdmin)
@@ -14,6 +14,7 @@ router.route("/admin/changepassword").post(isLoggedIn, changeAdminPassword)
 router.route("/admin/add/student").post(isLoggedIn, adminAddStudent)
 router.route("/admin/student/delete/:id").post(isLoggedIn, adminDeleteOneStudent)
 router.route("/admin/staff/delete/:id").post(isLoggedIn, adminDeleteOneStaff)
+router.route("/admin/feedbacks").get(isLoggedIn, studentFeedbackMessage)
 router.route("/admin/allStudentsList").get(isLoggedIn, findAllStudents)
 router.route("/admin/student").get(isLoggedIn, findOneStudent)
 router.route("/admin/add/staff").post(isLoggedIn, addStaff)

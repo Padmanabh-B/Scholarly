@@ -150,7 +150,7 @@ exports.uploadMarksForStudents = BigPromise(async (req, res, next) => {
             return next(new CustomError("All Fields are required"))
         }
         const subject = await Subject.findOne({ subjectCode })
-        const student = await Student.findOne({ studentClass })
+        const student = await Student.findOne({ studentClass }).populate({ path: "name" })
         if (!subject) {
             return next(new CustomError(`${subjectCode} Subject Code Not Valid One`))
         }
@@ -357,40 +357,38 @@ exports.updateStaffProfile = BigPromise(async (req, res, next) => {
 
 });
 
-exports.staffLeaveMessage = BigPromise(async (req, res, next) => {
-    try {
-        const { rollNo, name, reson, leaveMessage, leavefrom, leaveto, totaldays } = req.body;
-        if (!(rollNo || name || reson || leaveMessage || leavefrom || leaveto || totaldays)) {
-            return next(new CustomError('All Fields Are requied '))
-        }
-        let rno = await Staff.findOne({ rollNo });
-        if (!rno) {
-            return next(new CustomError('No Staff Found'))
-        }
+// exports.staffLeaveMessage = BigPromise(async (req, res, next) => {
+//     try {
+//         const { rollNo, name, reson, leaveMessage, leavefrom, leaveto, totaldays } = req.body;
+//         if (!(rollNo || name || reson || leaveMessage || leavefrom || leaveto || totaldays)) {
+//             return next(new CustomError('All Fields Are requied '))
+//         }
+//         let rno = await Staff.findOne({ rollNo });
+//         if (!rno) {
+//             return next(new CustomError('No Staff Found'))
+//         }
 
-        const staffLeave = await Leave.create({
-            rollNo,
-            name,
-            reson,
-            leaveMessage,
-            leavefrom,
-            leaveto,
-            totaldays,
-        });
+//         const staffLeave = await Leave.create({
+//             rollNo,
+//             name,
+//             reson,
+//             leaveMessage,
+//             leavefrom,
+//             leaveto,
+//             totaldays,
+//         });
 
-        res.status(201).json({
-            success: true,
-            message: "Leave Applied Successfully",
-            staffLeave
-        })
-    } catch (error) {
-        return next(new CustomError(`There is A Issue in Applying Leave ${error.message}`))
+//         res.status(201).json({
+//             success: true,
+//             message: "Leave Applied Successfully",
+//             staffLeave
+//         })
+//     } catch (error) {
+//         return next(new CustomError(`There is A Issue in Applying Leave ${error.message}`))
 
-    }
+//     }
 
-})
-
-
+// })
 
 exports.getAllAnnouncements = BigPromise(async (req, res, next) => {
     try {
@@ -404,6 +402,26 @@ exports.getAllAnnouncements = BigPromise(async (req, res, next) => {
     } catch (error) {
         console.log(error);
         return next(new CustomError(`Error in Finding Announcements ${error.message}`))
+    }
+});
+
+exports.approveLeave = BigPromise(async (req, res, next) => {
+    try {
+        const result = await Leave.findById(req.params.id);
+        if (result === 0) {
+            return next(new CustomError('No Leaves Found'))
+        }
+        const { status } = req.body;
+        const getResult = await Leave.find({ status })
+        if (getResult === 'pending') {
+            Leave.status == status
+            Leave.save()
+        }
+
+
+    } catch (error) {
+        return next(new CustomError(`${error.message}`))
+
     }
 })
 
@@ -452,13 +470,16 @@ exports.uploadStudentNotes = BigPromise(async (req, res, next) => {
 })
 
 exports.uploadStudnetAchivements = BigPromise(async (req, res, next) => {
-    regNo = await Student.findOne({ regNo })
     const { regNo, Drawing, Emotional_SocialSkills, Organisation_Skills, Scientific_Skills, Fine_Arts, Attitudes, Creative_Skills, Moral_Skills, About_Student } = req.body;
 
-    if (!regNo) {
-        return next(new CustomError("Register Number Does't Found"))
+    const rno = await Student.findOne({ regNo })
+
+    if (!rno) {
+        return next(new CustomError("Register Number Not  Found"))
     }
-    if (!(Drawing || Emotional_SocialSkills || Organisation_Skills || Scientific_Skills || Fine_Arts || Attitudes || Creative_Skills || Moral_Skills || About_Student)) {
+
+
+    if (!(regNo || Drawing || Emotional_SocialSkills || Organisation_Skills || Scientific_Skills || Fine_Arts || Attitudes || Creative_Skills || Moral_Skills || About_Student)) {
         return next(new CustomError('All Fields are Reqired'))
     }
 
@@ -474,11 +495,11 @@ exports.uploadStudnetAchivements = BigPromise(async (req, res, next) => {
         About_Student
     });
 
+
     res.status(201).json({
         success: true,
         message: "Added Successfully",
     })
-
 
 })
 
@@ -519,5 +540,6 @@ exports.deleteStaffAccount = BigPromise(async (req, res, next) => {
         success: true,
     })
 });
+
 
 

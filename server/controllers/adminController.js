@@ -3,6 +3,7 @@ const Student = require("../models/student.model")
 const Staff = require("../models/staff.model")
 const Subject = require("../models/subject.model")
 const Announcement = require('../models/announcements.model')
+const FeedBack = require("../models/feedback.model")
 const BigPromise = require("../middlewares/BigPromise.middleware")
 const CustomError = require("../utils/CustomError")
 const cookieToken = require("../utils/cookieToken")
@@ -525,5 +526,21 @@ exports.announceEvent = BigPromise(async (req, res, next) => {
 
 
 })
+
+exports.studentFeedbackMessage = BigPromise(async (req, res, next) => {
+    try {
+        const message = await FeedBack.find()
+        if (message === 0) {
+            return next(new CustomError('No Feedback Found'))
+        }
+        res.status(200), ({
+            message
+        })
+    } catch (error) {
+        return next(new CustomError(`There is A Issue in Applying Feedback ${error.message}`))
+
+    }
+
+});
 
 
