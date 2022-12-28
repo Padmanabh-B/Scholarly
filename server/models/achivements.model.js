@@ -1,9 +1,10 @@
 const mongoose = require('mongoose')
 
-const achivements = mongoose.Schema({
-    student: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
+const achivementSchema = mongoose.Schema({
+    regNo: {
+        type: String,
+        requied: true,
+        unique: [true, 'Its Already added']
     },
     Drawing: {
         type: String,
@@ -125,7 +126,7 @@ const achivements = mongoose.Schema({
             message: "Please Choose Any One - A+, A, B+, B, C+, C",
         }
     },
-    Abot_Student: {
+    About_Student: {
         type: String,
         required: true,
     },
@@ -133,4 +134,4 @@ const achivements = mongoose.Schema({
 
 })
 
-module.exports = mongoose.model('Achievements', achivements)
+module.exports = mongoose.model('Achievements', achivementSchema)
